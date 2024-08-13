@@ -1,0 +1,12 @@
+{"properties": [
+  {
+    "name": "serve.error.include-stacktrace",
+    "type": "java.lang.String",
+    "description": "A description for 'serve.error.include-stacktrace'"
+  },
+  {
+    "name": "serve.error.include-message",
+    "type": "java.lang.String",
+    "description": "A description for 'serve.error.include-message'"
+  }
+]}
