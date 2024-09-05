@@ -1,12 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, catchError, of } from 'rxjs';
+import { Observable, catchError, of, tap } from 'rxjs';
 import { ErrorDialogComponent } from '../../../shared/components/error-dialog/error-dialog.component';
 import { Course } from '../../model/course';
 import { CoursesService } from '../../services/courses.service';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { ConfirmationDialogComponent } from '../../../shared/components/confirmation-dialog/confirmation-dialog.component';
+import { CoursePage } from '../../model/course-page';
+import { MatPaginator, PageEvent } from '@angular/material/paginator';
 
 
 
@@ -17,7 +19,12 @@ import { ConfirmationDialogComponent } from '../../../shared/components/confirma
 })
 export class CoursesComponent  implements OnInit{
 
-  courses$: Observable <Course[]>;
+  courses$: Observable<CoursePage> | null = null;
+  
+    @ViewChild(MatPaginator) paginator!: MatPaginator;
+
+    pageIndex = 0;
+    pageSize = 10;
 
   //coursesService: CoursesService;
 
@@ -25,31 +32,30 @@ export class CoursesComponent  implements OnInit{
     private coursesService: CoursesService,
     public dialog: MatDialog,
     private router: Router,
-    private snackBar: MatSnackBar,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private snackBar: MatSnackBar
   ) {
+    this.refresh();
+  }
     //this.courses = [];
     //this.coursesService = new CoursesService();
-    this.courses$ = this.coursesService.list()
-    .pipe(
-      catchError(error => {
-        this.onError('erro ao carregar cursos.');
-        return of([])
-      })
-    );
+
+    refresh(pageEvent: PageEvent = { length: 0, pageIndex: 0, pageSize: 10 }) {
+      this.courses$ = this.coursesService.list(pageEvent.pageIndex, pageEvent.pageSize)
+        .pipe(
+          tap(() => {
+            this.pageIndex = pageEvent.pageIndex;
+            this.pageSize = pageEvent.pageSize;
+          }),
+          catchError(error => {
+            this.onError('Erro ao carregar cursos.');
+            return of({ courses: [], totalElements: 0, totalPages: 0 })
+          })
+        );
+    }
 
     //this.coursesService.list().subscribe(courses => this.courses = courses)
-  }
 
-  refresh() {
-    this.courses$ = this.coursesService.list()
-    .pipe(
-      catchError(error => {
-        this.onError('erro ao carregar cursos.');
-        return of([])
-      })
-    );
-  }
 
   onError(errorMsg: string) {
     this.dialog.open(ErrorDialogComponent, {
@@ -92,5 +98,5 @@ export class CoursesComponent  implements OnInit{
       }
     });
   }
-
+  
 }
